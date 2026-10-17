@@ -30,6 +30,8 @@ bel:                         # optioneel: deurbel licht op, ding-dong, camerabee
   camera: camera.deurbel
 ```
 
+Gedrag uit het model (userData `soort`): `lampje` (entity + boven/aan/uit + kleur), `deur` (scharnierende deur, open bij `on`), `garagedeur` (contactsensor + knop + duur), `stroom` (bewegende bolletjes langs `pad` als `aan` on is), `info` (kaartje met `regels` [label, entity]). Objecten `switch_*` werken als lamp (aan/uit).
+
 Camera's: objecten met naam `camera_<id>` openen bij een tik een live venster in het model, met beeld-in-beeld (PiP) en "volledig".
 
 Objectnamen in het model zijn de entity_id met de eerste punt vervangen door `_` (bijv. `light_lamp_bank`), lagen heten `laag_bg`, `laag_v1`, `laag_vl`, `laag_dak` enz.

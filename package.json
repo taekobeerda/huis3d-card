@@ -1,6 +1,6 @@
 {
   "name": "huis3d-card",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "private": true,
   "description": "Lichte 3D-weergave van een huis (GLB) in Home Assistant met lampen, verdiepingen en energie",
   "scripts": {
