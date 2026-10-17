@@ -24,7 +24,7 @@ class Huis3dCard extends HTMLElement {
   setConfig(c) { this._c = Object.assign({model: '/local/huis3d/huis-3d.glb', height: 'calc(100vh - 56px)', labels: {}, poort: {}, bel: {}}, c);
     this._c.poort = Object.assign({hoek: 90, open: {links: [0, 24], rechts: [2, 17]}, dicht: {rechts: [0, 16], links: [2, 27]}}, this._c.poort); }
   getCardSize() { return 12; }
-  set hass(h) { this._h = h; if (!this._init) this._bouw(); else this._staat(); }
+  set hass(h) { this._h = h; if (!this._init) this._bouw(); else { this._staat(); this.shadowRoot.querySelectorAll('.pop').forEach(p => { if (p._kaart) p._kaart.hass = h; }); } }
 
   _bouw() {
     this._init = true;
