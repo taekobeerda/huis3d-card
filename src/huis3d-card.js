@@ -157,7 +157,7 @@ class Huis3dCard extends HTMLElement {
         const nu = performance.now();
         if (!this._occT || nu - this._occT > 250) { this._occT = nu; const rc = this._occRay || (this._occRay = new THREE.Raycaster()), w0 = new THREE.Vector3();
           for (const {l, k} of this._knoppen) { if (!k._v) continue; (l.userData.gloed || l.userData.anker).getWorldPosition(w0);
-            const dir = w0.clone().sub(cam.position), afst = dir.length(); rc.set(cam.position, dir.normalize()); rc.far = afst - .25;
+            const dir = w0.clone().sub(cam.position), afst = dir.length(); rc.set(cam.position, dir.normalize()); rc.camera = cam; rc.far = afst - .25;
             k._dicht = rc.intersectObject(this._root, true).some(h => { if (h.object.isSprite) return false; let o = h.object; while (o) { if (!o.visible || o === l) return false; o = o.parent; }
               const mt = Array.isArray(h.object.material) ? h.object.material[0] : h.object.material; if (mt && mt.transparent && mt.opacity < .7) return false;
               return this._wandVlak.distanceToPoint(h.point) >= 0 && this._plafVlak.distanceToPoint(h.point) >= 0; }); } }
