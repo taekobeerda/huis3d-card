@@ -118,7 +118,8 @@ class Huis3dCard extends HTMLElement {
       this._stromen = (this._gedrag || []).filter(o => o.userData.soort === 'stroom').map(o => {
         const p = o.userData.pad, pts = []; for (let i = 0; i < p.length; i += 3) pts.push(new THREE.Vector3(p[i], p[i + 1], p[i + 2]));
         const curve = new THREE.CurvePath(); for (let i = 0; i < pts.length - 1; i++) curve.add(new THREE.LineCurve3(pts[i], pts[i + 1]));
-        const len = curve.getLength(), n = Math.max(12, Math.round(len / .35)), im = new THREE.InstancedMesh(new THREE.SphereGeometry(.035, 10, 8), new THREE.MeshBasicMaterial({color: 0xff5a36}), n);
+        const len = curve.getLength(), n = Math.max(12, Math.round(len / .35)), im = new THREE.InstancedMesh(new THREE.SphereGeometry(.035, 10, 8), new THREE.MeshBasicMaterial({color: 0xff5a36, transparent: true, opacity: .9, depthTest: false}), n);   // ook door muren en grond heen zichtbaar
+        im.renderOrder = 10;
         im.frustumCulled = false; im.visible = false; (o.parent || this._root).add(im); return {o, curve, im, n, len}; });
       this._toepassen(); this._staat();
     }, e => { throw e; })).catch(e => { const l = r.querySelector('.laad'); if (l) l.textContent = 'Model niet geladen: ' + e.message; });
@@ -268,7 +269,7 @@ class Huis3dCard extends HTMLElement {
     (window.loadCardHelpers ? window.loadCardHelpers() : Promise.reject()).then(hlp => {
       const kaart = hlp.createCardElement({type: 'picture-entity', entity: id, camera_view: 'live', show_name: false, show_state: false, tap_action: {action: 'none'}});
       kaart.hass = this._h; vak.replaceChildren(kaart); p._kaart = kaart; }).catch(fallback);
-    const b = w.getBoundingClientRect(), v = new THREE.Vector3(); (obj && (obj.userData.anker || obj)).getWorldPosition(v); v.project(this.cam);
+    const b = w.getBoundingClientRect(), v = new THREE.Vector3(); if (obj) { (obj.userData.anker || obj).getWorldPosition(v); v.project(this.cam); } else v.set(0, 0, 0);
     p.style.left = Math.max(8, Math.min(b.width - 300, (v.x + 1) / 2 * b.width + 20)) + 'px'; p.style.top = Math.max(60, Math.min(b.height - 260, (1 - v.y) / 2 * b.height - 120)) + 'px';
     w.appendChild(p);
     p._weg = () => { vak.replaceChildren(); p.remove(); };
