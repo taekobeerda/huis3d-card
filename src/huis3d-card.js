@@ -72,7 +72,9 @@ class Huis3dCard extends HTMLElement {
     this._nb = knop('wa', 'Nacht', () => { this._st.nacht = !this._st.nacht; this._toepassen(); });
     this._st.knop = true; this._kb = knop('wa', 'Lampknoppen', () => { this._st.knop = !this._st.knop; this._toepassen(); });
 
-    new GLTFLoader().load(this._c.model, g => {
+    // model altijd opnieuw laten controleren (cache: 'no-cache' = alleen opnieuw downloaden als het bestand veranderd is)
+    fetch(this._c.model, {cache: 'no-cache'}).then(r => { if (!r.ok) throw new Error(r.status + ' ' + r.statusText); return r.arrayBuffer(); })
+      .then(buf => new GLTFLoader().parse(buf, '', g => {
       r.querySelector('.laad').remove();
       const root = g.scene; scene.add(root); this._root = root;
       this._lagen = {}; this._lampen = []; this._bouwMats = []; this._binnenMats = [];
@@ -105,7 +107,7 @@ class Huis3dCard extends HTMLElement {
         ...(this._cams || []).map(c => mk(c, '📷', () => this._camera(c.name.replace('_', '.'), c), 'cam')),
         ...(this._vleugels && this._c.poort.entity ? [mk(this._vleugels.rechts || this._vleugels.links, '🚧', () => this._poortVraag(), 'poort')] : [])];
       this._toepassen(); this._staat();
-    }, undefined, e => { r.querySelector('.laad').textContent = 'Model niet geladen: ' + e.message; });
+    }, e => { throw e; })).catch(e => { const l = r.querySelector('.laad'); if (l) l.textContent = 'Model niet geladen: ' + e.message; });
 
     // tik op een lamp = aan/uit (niet bij slepen)
     const ray = new THREE.Raycaster(), m = new THREE.Vector2(); let dn = null;
@@ -151,6 +153,15 @@ class Huis3dCard extends HTMLElement {
       if (this._knoppen) { const b = w.getBoundingClientRect(); for (const {l, k} of this._knoppen) { let vis = this._st.knop, p = l; while (p && vis) { if (!p.visible) vis = false; p = p.parent; }
           if (vis) { (l.userData.gloed || l.userData.anker).getWorldPosition(v); v.project(cam); vis = v.z < 1 && Math.abs(v.x) < 1.05 && Math.abs(v.y) < 1.05; }
           k.style.display = vis ? '' : 'none'; k._x = (v.x + 1) / 2 * b.width; k._y = (1 - v.y) / 2 * b.height; k._v = vis; }
+        // knopjes achter een muur of vloer verbergen (raycast, niet elk frame)
+        const nu = performance.now();
+        if (!this._occT || nu - this._occT > 250) { this._occT = nu; const rc = this._occRay || (this._occRay = new THREE.Raycaster()), w0 = new THREE.Vector3();
+          for (const {l, k} of this._knoppen) { if (!k._v) continue; (l.userData.gloed || l.userData.anker).getWorldPosition(w0);
+            const dir = w0.clone().sub(cam.position), afst = dir.length(); rc.set(cam.position, dir.normalize()); rc.far = afst - .25;
+            k._dicht = rc.intersectObject(this._root, true).some(h => { if (h.object.isSprite) return false; let o = h.object; while (o) { if (!o.visible || o === l) return false; o = o.parent; }
+              const mt = Array.isArray(h.object.material) ? h.object.material[0] : h.object.material; if (mt && mt.transparent && mt.opacity < .7) return false;
+              return this._wandVlak.distanceToPoint(h.point) >= 0 && this._plafVlak.distanceToPoint(h.point) >= 0; }); } }
+        for (const {k} of this._knoppen) if (k._v && k._dicht) { k._v = false; k.style.display = 'none'; }
         // knopjes die (bijna) op elkaar vallen naast elkaar zetten (bv. eettafel up/down)
         const zicht = this._knoppen.filter(({k}) => k._v);
         zicht.forEach(({k}, i) => { for (let j = 0; j < i; j++) { const o = zicht[j].k; if (Math.hypot(k._x - o._x, k._y - o._y) < 26) { k._x = o._x + 30; } }
